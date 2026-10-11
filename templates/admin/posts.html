@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}จัดการโพสต์ - Admin Study Blog{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <h2>📑 จัดการโพสต์ทั้งหมด ({{ posts|length }})</h2>
+  <div style="display: flex; gap: 0.5rem;">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline btn-sm">&larr; กลับ Dashboard</a>
+    <a href="{{ url_for('admin_users') }}" class="btn btn-outline btn-sm">👥 จัดการผู้ใช้</a>
+  </div>
+</div>
+
+{% if posts %}
+  <div class="card" style="padding: 0; overflow: hidden;">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>หัวข้อบทความ</th>
+            <th>ผู้เขียน</th>
+            <th>ความคิดเห็น</th>
+            <th>วันที่สร้าง</th>
+            <th style="text-align: right;">การจัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in posts %}
+            <tr>
+              <td>#{{ p.id }}</td>
+              <td>
+                <a href="{{ url_for('post_detail', post_id=p.id) }}" style="font-weight: 600; color: var(--primary); text-decoration: none;">
+                  {{ p.title }}
+                </a>
+              </td>
+              <td><strong>{{ p.author_name }}</strong></td>
+              <td>{{ p.comment_count }}</td>
+              <td>{{ p.created_at[:16] }}</td>
+              <td style="text-align: right;">
+                <div style="display: inline-flex; gap: 0.35rem;">
+                  <a href="{{ url_for('post_detail', post_id=p.id) }}" class="btn btn-outline btn-sm">ดูโพสต์</a>
+                  <form action="{{ url_for('delete_post', post_id=p.id) }}" method="POST" onsubmit="return confirm('ยืนยันลบโพสต์ \'{{ p.title }}\'? (Admin สิทธิ์ผู้ดูแล)');" style="margin: 0; display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger btn-sm">🗑️ ลบโพสต์</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% else %}
+  <div class="card" style="text-align: center; padding: 3rem 1rem;">
+    <p style="color: var(--text-muted); font-size: 1.1rem;">ยังไม่มีโพสต์ในระบบ</p>
+  </div>
+{% endif %}
+{% endblock %}

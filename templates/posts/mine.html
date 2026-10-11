@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}บทความของฉัน - Study Blog{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+  <h2>📑 บทความของฉัน ({{ posts|length }})</h2>
+  <a href="{{ url_for('new_post') }}" class="btn btn-primary">➕ เขียนบทความใหม่</a>
+</div>
+
+{% if posts %}
+  <div class="card" style="padding: 0; overflow: hidden;">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>หัวข้อบทความ</th>
+            <th>ความคิดเห็น</th>
+            <th>วันที่สร้าง</th>
+            <th>แก้ไขล่าสุด</th>
+            <th style="text-align: right;">การจัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for post in posts %}
+            <tr>
+              <td>
+                <a href="{{ url_for('post_detail', post_id=post.id) }}" style="font-weight: 600; color: var(--primary); text-decoration: none;">
+                  {{ post.title }}
+                </a>
+              </td>
+              <td>{{ post.comment_count }}</td>
+              <td>{{ post.created_at }}</td>
+              <td>{{ post.updated_at }}</td>
+              <td style="text-align: right;">
+                <div style="display: inline-flex; gap: 0.35rem;">
+                  <a href="{{ url_for('post_detail', post_id=post.id) }}" class="btn btn-outline btn-sm">ดู</a>
+                  <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn btn-outline btn-sm">แก้ไข</a>
+                  <form action="{{ url_for('delete_post', post_id=post.id) }}" method="POST" onsubmit="return confirm('ยืนยันที่จะลบโพสต์นี้หรือไม่?');" style="margin: 0; display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="next" value="{{ url_for('my_posts') }}">
+                    <button type="submit" class="btn btn-danger btn-sm">ลบ</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% else %}
+  <div class="card" style="text-align: center; padding: 3rem 1rem;">
+    <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 1rem;">คุณยังไม่ได้เขียนบทความใดๆ</p>
+    <a href="{{ url_for('new_post') }}" class="btn btn-primary">เริ่มเขียนบทความแรกของคุณเลย!</a>
+  </div>
+{% endif %}
+{% endblock %}

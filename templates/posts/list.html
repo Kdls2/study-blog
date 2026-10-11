@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}บทความทั้งหมด - Study Blog{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+  <h2>📑 บทความทั้งหมด</h2>
+  {% if current_user %}
+    <a href="{{ url_for('new_post') }}" class="btn btn-primary">➕ เขียนบทความใหม่</a>
+  {% endif %}
+</div>
+
+{% if posts %}
+  {% for post in posts %}
+    <article class="card">
+      <h3 class="card-title">
+        <a href="{{ url_for('post_detail', post_id=post.id) }}" style="text-decoration: none; color: inherit;">
+          {{ post.title }}
+        </a>
+      </h3>
+
+      <div class="card-meta">
+        <span>✍️ เขียนโดย: <strong>{{ post.author_name }}</strong></span>
+        <span>🕒 เมื่อ: {{ post.created_at }}</span>
+        <span>💬 ความคิดเห็น: {{ post.comment_count }} รายการ</span>
+      </div>
+
+      <p style="color: #4b5563; margin-bottom: 1rem; line-height: 1.6;">
+        {{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}
+      </p>
+
+      <div>
+        <a href="{{ url_for('post_detail', post_id=post.id) }}" class="btn btn-outline btn-sm">อ่านต่อ &rarr;</a>
+      </div>
+    </article>
+  {% endfor %}
+{% else %}
+  <div class="card" style="text-align: center; padding: 3rem 1rem;">
+    <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 1rem;">ยังไม่มีบทความในระบบ</p>
+    {% if current_user %}
+      <a href="{{ url_for('new_post') }}" class="btn btn-primary">เริ่มเขียนบทความแรกของคุณ</a>
+    {% else %}
+      <a href="{{ url_for('login') }}" class="btn btn-primary">เข้าสู่ระบบเพื่อเริ่มเขียนบทความ</a>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}

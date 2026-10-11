@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}จัดการผู้ใช้ - Admin Study Blog{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <h2>👥 จัดการผู้ใช้ทั้งหมด ({{ users|length }})</h2>
+  <div style="display: flex; gap: 0.5rem;">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline btn-sm">&larr; กลับ Dashboard</a>
+    <a href="{{ url_for('admin_posts') }}" class="btn btn-outline btn-sm">📑 จัดการโพสต์</a>
+  </div>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden;">
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>ชื่อผู้ใช้</th>
+          <th>อีเมล</th>
+          <th>บทบาท (Role)</th>
+          <th>โพสต์</th>
+          <th>คอมเมนต์</th>
+          <th>วันที่สมัคร</th>
+          <th style="text-align: right;">การจัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+          <tr>
+            <td>#{{ u.id }}</td>
+            <td>
+              <strong>{{ u.username }}</strong>
+              {% if u.id == current_user.id %}
+                <span style="font-size: 0.75rem; color: var(--primary);">(คุณ)</span>
+              {% endif %}
+            </td>
+            <td>{{ u.email }}</td>
+            <td>
+              <span class="badge badge-{{ u.role }}">{{ u.role }}</span>
+            </td>
+            <td>{{ u.post_count }}</td>
+            <td>{{ u.comment_count }}</td>
+            <td>{{ u.created_at[:16] }}</td>
+            <td style="text-align: right;">
+              {% if u.id == current_user.id %}
+                <span style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">
+                  บัญชีตัวเอง (ห้ามแก้ไขสิทธิ์/ลบ)
+                </span>
+              {% else %}
+                <div style="display: inline-flex; gap: 0.5rem; align-items: center;">
+                  <!-- Change Role Form -->
+                  <form action="{{ url_for('admin_change_role', user_id=u.id) }}" method="POST" style="margin: 0; display: inline-flex; gap: 0.25rem;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <select name="role" class="form-control" style="padding: 0.2rem 0.4rem; font-size: 0.8rem; width: auto;">
+                      <option value="user" {% if u.role == 'user' %}selected{% endif %}>user</option>
+                      <option value="admin" {% if u.role == 'admin' %}selected{% endif %}>admin</option>
+                    </select>
+                    <button type="submit" class="btn btn-outline btn-sm">บันทึก</button>
+                  </form>
+
+                  <!-- Delete User Form -->
+                  <form action="{{ url_for('admin_delete_user', user_id=u.id) }}" method="POST" onsubmit="return confirm('ยืนยันลบผู้ใช้ {{ u.username }}? โพสต์และความคิดเห็นของผู้ใช้นี้จะถูกลบไปด้วยตาม Foreign Key CASCADE');" style="margin: 0;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger btn-sm">ลบ</button>
+                  </form>
+                </div>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Study Blog{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <h2>⚙️ แผงควบคุมผู้ดูแลระบบ (Admin Dashboard)</h2>
+  <div style="display: flex; gap: 0.5rem;">
+    <a href="{{ url_for('admin_users') }}" class="btn btn-outline btn-sm">👥 จัดการผู้ใช้</a>
+    <a href="{{ url_for('admin_posts') }}" class="btn btn-outline btn-sm">📑 จัดการโพสต์ทั้งหมด</a>
+  </div>
+</div>
+
+<!-- Stats Counter -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <span class="stat-value">{{ user_count }}</span>
+    <span class="stat-label">👥 สมาชิกทั้งหมด</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value">{{ post_count }}</span>
+    <span class="stat-label">📝 บทความทั้งหมด</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value">{{ comment_count }}</span>
+    <span class="stat-label">💬 ความคิดเห็นทั้งหมด</span>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+  <!-- Recent Users -->
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h3 style="font-size: 1.1rem;">👤 สมาชิกล่าสุด</h3>
+      <a href="{{ url_for('admin_users') }}" style="font-size: 0.85rem; color: var(--primary);">ดูทั้งหมด &rarr;</a>
+    </div>
+
+    {% if recent_users %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ชื่อผู้ใช้</th>
+              <th>สิทธิ์</th>
+              <th>วันที่สมัคร</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in recent_users %}
+              <tr>
+                <td>{{ u.username }}</td>
+                <td><span class="badge badge-{{ u.role }}">{{ u.role }}</span></td>
+                <td>{{ u.created_at[:10] }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p style="color: var(--text-muted); font-size: 0.9rem;">ไม่มีข้อมูลสมาชิก</p>
+    {% endif %}
+  </div>
+
+  <!-- Recent Posts -->
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h3 style="font-size: 1.1rem;">📝 บทความล่าสุด</h3>
+      <a href="{{ url_for('admin_posts') }}" style="font-size: 0.85rem; color: var(--primary);">ดูทั้งหมด &rarr;</a>
+    </div>
+
+    {% if recent_posts %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>หัวข้อ</th>
+              <th>ผู้เขียน</th>
+              <th>วันที่</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in recent_posts %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('post_detail', post_id=p.id) }}" style="color: var(--text-main); font-weight: 500; text-decoration: none;">
+                    {{ p.title[:25] }}{% if p.title|length > 25 %}...{% endif %}
+                  </a>
+                </td>
+                <td>{{ p.author_name }}</td>
+                <td>{{ p.created_at[:10] }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p style="color: var(--text-muted); font-size: 0.9rem;">ไม่มีบทความ</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} - Study Blog{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1rem;">
+  <a href="{{ url_for('index') }}" class="btn btn-outline btn-sm">&larr; กลับหน้ารายการ</a>
+</div>
+
+<article class="card">
+  <h1 class="card-title" style="font-size: 1.85rem; margin-bottom: 0.5rem;">{{ post.title }}</h1>
+
+  <div class="card-meta">
+    <span>✍️ โดย: <strong>{{ post.author_name }}</strong> <span class="badge badge-{{ post.author_role }}">{{ post.author_role }}</span></span>
+    <span>🕒 เผยแพร่: {{ post.created_at }}</span>
+    {% if post.updated_at != post.created_at %}
+      <span>✏️ แก้ไขล่าสุด: {{ post.updated_at }}</span>
+    {% endif %}
+  </div>
+
+  <hr style="border: 0; border-top: 1px solid var(--border); margin: 1rem 0;">
+
+  <!-- Post Body - Auto-escaped by Jinja2 for XSS prevention -->
+  <div class="post-body">
+    {{ post.content }}
+  </div>
+
+  <!-- Ownership Actions -->
+  {% if current_user %}
+    <div style="display: flex; gap: 0.5rem; justify-content: flex-end; border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 1rem;">
+      {% if post.user_id == current_user.id %}
+        <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn btn-outline btn-sm">✏️ แก้ไขโพสต์</a>
+        <form action="{{ url_for('delete_post', post_id=post.id) }}" method="POST" onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบโพสต์นี้?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger btn-sm">🗑️ ลบโพสต์</button>
+        </form>
+      {% elif current_user.role == 'admin' %}
+        <form action="{{ url_for('delete_post', post_id=post.id) }}" method="POST" onsubmit="return confirm('ในฐานะ Admin คุณต้องการลบโพสต์นี้หรือไม่?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger btn-sm">🗑️ ลบโพสต์ (Admin)</button>
+        </form>
+      {% endif %}
+    </div>
+  {% endif %}
+</article>
+
+<!-- Comments Section -->
+<section style="margin-top: 2rem;">
+  <h3 style="margin-bottom: 1.25rem;">💬 ความคิดเห็น ({{ comments|length }})</h3>
+
+  {% if comments %}
+    <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
+      {% for comment in comments %}
+        <div class="comment-box">
+          <div class="comment-header">
+            <div>
+              <strong>{{ comment.author_name }}</strong>
+              <span class="badge badge-{{ comment.author_role }}">{{ comment.author_role }}</span>
+              <span style="margin-left: 0.5rem;">• {{ comment.created_at }}</span>
+            </div>
+
+            {% if current_user and (comment.user_id == current_user.id or current_user.role == 'admin') %}
+              <form action="{{ url_for('delete_comment', comment_id=comment.id) }}" method="POST" onsubmit="return confirm('ต้องการลบความคิดเห็นนี้ใช่หรือไม่?');" style="margin: 0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger btn-sm" style="padding: 0.15rem 0.4rem; font-size: 0.75rem;">ลบ</button>
+              </form>
+            {% endif %}
+          </div>
+
+          <div class="comment-content">{{ comment.content }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">ยังไม่มีความคิดเห็น มาเป็นคนแรกที่แสดงความคิดเห็น!</p>
+  {% endif %}
+
+  <!-- Add Comment Form -->
+  <div class="card">
+    <h4 style="margin-bottom: 1rem;">✍️ เขียนความคิดเห็น</h4>
+    {% if current_user %}
+      <form action="{{ url_for('add_comment', post_id=post.id) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+          <textarea name="content" class="form-control" placeholder="ร่วมแสดงความคิดเห็น..." required maxlength="500" rows="3"></textarea>
+          <span class="form-text">ความยาวไม่เกิน 500 ตัวอักษร</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-sm">ส่งความคิดเห็น</button>
+      </form>
+    {% else %}
+      <p style="color: var(--text-muted);">
+        กรุณา <a href="{{ url_for('login', next=request.path) }}" style="color: var(--primary);">เข้าสู่ระบบ</a> เพื่อแสดงความคิดเห็น
+      </p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

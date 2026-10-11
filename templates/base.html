@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Study Blog{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="{{ url_for('index') }}" class="brand">
+        📚 Study Blog
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="{{ url_for('index') }}" class="nav-link">หน้าแรก</a></li>
+        
+        {% if current_user %}
+          <li><a href="{{ url_for('new_post') }}" class="nav-link">➕ เขียนโพสต์</a></li>
+          <li><a href="{{ url_for('my_posts') }}" class="nav-link">โพสต์ของฉัน</a></li>
+          
+          {% if current_user.role == 'admin' %}
+            <li><a href="{{ url_for('admin_dashboard') }}" class="nav-link" style="color: #b91c1c; font-weight: 600;">⚙️ ระบบ Admin</a></li>
+          {% endif %}
+
+          <li class="nav-user">
+            <span class="badge badge-{{ current_user.role }}">
+              {{ current_user.username }} ({{ current_user.role }})
+            </span>
+            <form action="{{ url_for('logout') }}" method="POST" style="display: inline;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-outline btn-sm">ออกจากระบบ</button>
+            </form>
+          </li>
+        {% else %}
+          <li><a href="{{ url_for('login') }}" class="nav-link">เข้าสู่ระบบ</a></li>
+          <li><a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">สมัครสมาชิก</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-container">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <p>Study Blog &copy; 2026 — โครงการศึกษาการพัฒนาเว็บแอปพลิเคชันอย่างปลอดภัย</p>
+  </footer>
+
+</body>
+</html>

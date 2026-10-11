@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}สมัครสมาชิก - Study Blog{% endblock %}
+
+{% block content %}
+<div style="max-width: 480px; margin: 2rem auto;">
+  <div class="card">
+    <h2 class="card-title" style="text-align: center; margin-bottom: 1.5rem;">📝 สมัครสมาชิก</h2>
+
+    <form method="POST" action="{{ url_for('register') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="form-group">
+        <label for="username" class="form-label">ชื่อผู้ใช้ (Username)</label>
+        <input type="text" id="username" name="username" class="form-control"
+               value="{{ username or '' }}" required autofocus maxlength="30" autocomplete="username">
+        <span class="form-text">ความยาว 3 - 30 ตัวอักษร</span>
+      </div>
+
+      <div class="form-group">
+        <label for="email" class="form-label">อีเมล (Email)</label>
+        <input type="email" id="email" name="email" class="form-control"
+               value="{{ email or '' }}" required maxlength="100" autocomplete="email">
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">รหัสผ่าน (Password)</label>
+        <input type="password" id="password" name="password" class="form-control"
+               required minlength="8" autocomplete="new-password">
+        <span class="form-text">อย่างน้อย 8 ตัวอักษร</span>
+      </div>
+
+      <div class="form-group">
+        <label for="confirm_password" class="form-label">ยืนยันรหัสผ่าน (Confirm Password)</label>
+        <input type="password" id="confirm_password" name="confirm_password" class="form-control"
+               required minlength="8" autocomplete="new-password">
+      </div>
+
+      <div style="margin-top: 1.5rem;">
+        <button type="submit" class="btn btn-primary" style="width: 100%;">สมัครสมาชิก</button>
+      </div>
+    </form>
+
+    <div style="text-align: center; margin-top: 1.25rem; font-size: 0.9rem;">
+      มีบัญชีอยู่แล้วใช่ไหม? <a href="{{ url_for('login') }}" style="color: var(--primary);">เข้าสู่ระบบที่นี่</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
