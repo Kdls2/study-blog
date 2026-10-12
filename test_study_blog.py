@@ -118,7 +118,8 @@ class StudyBlogTestCase(unittest.TestCase):
         }, follow_redirects=True)
         self.assertIn("ยินดีต้อนรับ".encode("utf-8"), res.data)
         with self.client.session_transaction() as sess:
-            self.assertEqual(sess.get("role"), "admin")
+            self.assertIsNotNone(sess.get("user_id"))
+            self.assertNotIn("role", sess)
             
         # Logout
         token = self.get_csrf_token(res.data)
@@ -450,6 +451,67 @@ class StudyBlogTestCase(unittest.TestCase):
         # Following redirect shows the comment
         res = self.client.get(f"/posts/{post_id}")
         self.assertIn("Great article!".encode("utf-8"), res.data)
+
+    # -------------------------------------------------------------
+    # 11.4 การทดสอบความปลอดภัยเพิ่มเติม (Burp Suite Hardening Tests)
+    # -------------------------------------------------------------
+    def test_20_security_headers_present(self):
+        """#20 ตรวจสอบ Response Headers ต้องมี CSP, XFO, HSTS, nosniff ครบถ้วน"""
+        res = self.client.get("/")
+        self.assertIn("Content-Security-Policy", res.headers)
+        self.assertEqual(res.headers.get("X-Frame-Options"), "SAMEORIGIN")
+        self.assertIn("max-age=31536000", res.headers.get("Strict-Transport-Security", ""))
+        self.assertEqual(res.headers.get("X-Content-Type-Options"), "nosniff")
+        self.assertNotIn("Server", res.headers)
+        self.assertNotIn("X-Render-Origin-Server", res.headers)
+
+    def test_21_open_redirect_prevention(self):
+        """#21 Open Redirect: ?next=//evil.com หรือ https://evil.com ถูกส่งกลับ index"""
+        res = self.client.get("/login")
+        token = self.get_csrf_token(res.data)
+        res = self.client.post("/login?next=//evil.com", data={
+            "csrf_token": token,
+            "username": "admin",
+            "password": "Admin@12345"
+        }, follow_redirects=False)
+        self.assertEqual(res.status_code, 302)
+        self.assertEqual(res.headers.get("Location"), "/")
+
+    def test_22_password_policy_enforcement(self):
+        """#22 Password Policy: ปฏิเสธ password=username และรหัสที่ขาด complexity"""
+        res = self.client.get("/register")
+        token = self.get_csrf_token(res.data)
+        # 1. Password equals username
+        res = self.client.post("/register", data={
+            "csrf_token": token,
+            "username": "userWeak",
+            "email": "weak@test.com",
+            "password": "userWeak",
+            "confirm_password": "userWeak"
+        }, follow_redirects=True)
+        self.assertIn("รหัสผ่านต้องไม่ตรงกับชื่อผู้ใช้".encode("utf-8"), res.data)
+
+        # 2. Password missing uppercase or digits
+        token = self.get_csrf_token(res.data)
+        res = self.client.post("/register", data={
+            "csrf_token": token,
+            "username": "userWeak2",
+            "email": "weak2@test.com",
+            "password": "onlylowercase",
+            "confirm_password": "onlylowercase"
+        }, follow_redirects=True)
+        self.assertIn("รหัสผ่านต้องประกอบด้วยตัวพิมพ์ใหญ่".encode("utf-8"), res.data)
+
+    def test_23_client_role_tampering_ignored(self):
+        """#23 Client-Side Cookie Tampering: ปลอมแปลง role ใน session ไม่มีผล (ตรวจจาก DB เสมอ)"""
+        self.create_and_login_user("userRegular")
+        # Attacker injects 'role: admin' into client-side session
+        with self.client.session_transaction() as sess:
+            sess["role"] = "admin"
+
+        # Access /admin -> must still return 403 because DB role is 'user'
+        res = self.client.get("/admin")
+        self.assertEqual(res.status_code, 403)
 
 if __name__ == "__main__":
     unittest.main()
